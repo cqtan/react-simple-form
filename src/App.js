@@ -26,19 +26,52 @@ const formTextAreas = [
   }
 ];
 
+const formSelectFields = [
+  {
+
+  }
+];
+
+const formCheckBoxes = [
+  {
+    label: "Starting Items",
+    items: [
+      "Life Ring",
+      "Fire Bombs x5",
+      "Cracked Red Eye Orb"
+    ]
+  }
+];
+
+const formRadioButtons = [
+  {
+
+  }
+];
+
 function TableRow(props) {
+  function handleEvent() {
+    props.removeTableRow(props.index);
+    console.log("Removing Entry from index: " + props.index);
+  }
+
   return(
     <tr>
       <td>{props.data.name}</td>
       <td>{props.data.title}</td>
       <td>{props.data.background}</td>
+      <td>
+        <Button className="btn btn-danger" type="button" onClick={handleEvent}>
+          Kick-{props.index}
+        </Button>
+      </td>
     </tr>
   )
 }
 
 function TableContainer(props) {
-  let tableRow = props.tableData.map((data) =>
-    <TableRow data={data}/>
+  let tableRow = props.tableData.map((data, index) =>
+    <TableRow data={data} index={index} removeTableRow={props.removeTableRow}/>
   );
 
   return (
@@ -49,6 +82,7 @@ function TableContainer(props) {
             <th>Name</th>
             <th>Title</th>
             <th>Background Story</th>
+            <th>Kick From Party</th>
           </tr>
         </thead>
         <tbody>
@@ -56,13 +90,13 @@ function TableContainer(props) {
         </tbody>
       </Table>
     </div>
-  )
+  );
 }
 
 function SubmitButton(props) {
   function handleEvent() {
     props.addToTable(props.entries);
-    props.resetHandler();
+    props.resetInputValues();
   }
 
   return (
@@ -71,43 +105,24 @@ function SubmitButton(props) {
         Create Character
       </Button>
     </div>
-  )
+  );
 }
 
-class SubmitHandler extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      table: []
-    }
-    this.addToTable = this.addToTable.bind(this)
-  }
-
-  // TODO: Move this to parent
-  addToTable(entries) {
-    let newTable = this.state.table.slice();
-    newTable.push(entries);
-    this.setState({
-      table: newTable
-    }, function() {
-      this.props.tableHandler(this.state.table);
-    })
-  }
-
-  render() {
-    return(
-      <SubmitButton entries={this.props.entries}
-                    addToTable={this.addToTable}
-                    resetHandler={this.props.resetHandler}
-      />
-    );
-  }
+function SubmitHandler(props) {
+  return(
+    <SubmitButton entries={props.entries}
+                  addToTable={props.addToTable}
+                  resetInputValues={props.resetInputValues}
+    />
+  );
 }
 
 function RightFormContainer(props) {
+  let checkBoxes = GenerateCheckBoxes(formCheckBoxes, props.eventHandler);
+
   return (
     <div>
-
+      {checkBoxes}
     </div>
   )
 }
@@ -122,6 +137,25 @@ function FieldGroup({ id, label, help, ...props }) {
       </Col>
     </FormGroup>
   );
+}
+
+//TODO: here!
+function GenerateCheckBoxes(data, eventHandler) {
+
+  let checkBoxes = data.items.map((e, index) =>
+      <Col md={2}>
+        <Checkbox inline>{e.items[index]}</Checkbox>
+      </Col>
+  );
+
+  let checkBoxesContainer = data.map((e) =>
+    <FieldGroup>
+      <ControlLabel>{e.label}</ControlLabel>
+      {checkBoxes}
+    </FieldGroup>
+  );
+
+  return checkBoxesContainer;
 }
 
 function GenerateTextAreas(data, eventHandler) {
@@ -159,7 +193,7 @@ function LeftFormContainer(props) {
       {inputFields}
       {textAreas}
     </div>
-  )
+  );
 }
 
 function Description(props) {
@@ -172,7 +206,7 @@ function Description(props) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Title(props) {
@@ -182,7 +216,7 @@ function Title(props) {
         Fictional RPG Party Creator!
       </div>
     </div>
-  )
+  );
 }
 
 class App extends Component {
@@ -196,7 +230,8 @@ class App extends Component {
     }
     this.handleChange = this.handleChange.bind(this)
     this.resetInputValues = this.resetInputValues.bind(this)
-    this.getTableValues = this.getTableValues.bind(this)
+    this.addToTable = this.addToTable.bind(this)
+    this.removeTableRow = this.removeTableRow.bind(this)
   }
 
   handleChange(e) {
@@ -216,12 +251,19 @@ class App extends Component {
     }
   }
 
-  //TODO: Replace this with 'addToTable()'
-  getTableValues(newTable) {
+  addToTable() {
+    let newTable = this.state.table.slice();
+    newTable.push(this.state);
     this.setState({
       table: newTable
-    }, function () {
-      console.log("GetTableData: " + this.state.table[0].name);
+    })
+  }
+
+  removeTableRow(index) {
+    let newTable = this.state.table.slice();
+    newTable.splice(index, 1);
+    this.setState({
+      table: newTable
     })
   }
 
@@ -233,7 +275,7 @@ class App extends Component {
     return (
       <div className="container">
         <Grid>
-          <Row className="show-grid">
+          <Row>
             <Col md={12}>
               <Title/>
               <Description/>
@@ -241,16 +283,17 @@ class App extends Component {
           </Row>
           <form ref={(e) => {this.formRef = e;}}>
               <LeftFormContainer eventHandler={this.handleChange} />
-              <RightFormContainer />
-              <SubmitHandler entries={this.state}
-                             tableHandler={this.getTableValues}
-                             resetHandler={this.resetInputValues}
+              <RightFormContainer eventHandler={this.handleChange} />
+              <SubmitHandler addToTable={this.addToTable}
+                             resetInputValues={this.resetInputValues}
               />
           </form>
           <br></br><br></br>
-          <Row className="show-grid">
+          <Row>
             <Col md={12}>
-              <TableContainer tableData={this.state.table}/>
+              <TableContainer tableData={this.state.table}
+                              removeTableRow={this.removeTableRow}
+              />
             </Col>
           </Row>
         </Grid>
