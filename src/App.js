@@ -30,6 +30,7 @@ const formSelectFields = [
   {
     id: "selectTrait",
     label: "Trait",
+    placeholder: "Tough",
     traits: [
       "Tough",
       "Cunning",
@@ -79,6 +80,7 @@ function TableRow(props) {
       <td>{props.data.background}</td>
       <td>{props.data.items.map((item) => <p>{item}</p>)}</td>
       <td>{props.data.role}</td>
+      <td>{props.data.trait}</td>
       <td>
         <Button className="btn btn-danger" type="button" onClick={handleEvent}>
           Kick
@@ -103,6 +105,7 @@ function TableContainer(props) {
             <th>Background Story</th>
             <th>Items</th>
             <th>Role</th>
+            <th>Trait</th>
             <th>Kick From Party</th>
           </tr>
         </thead>
@@ -168,7 +171,7 @@ function GenerateCheckBoxes(data, eventHandler) {
   );
 
   function CheckBoxes(id, items) {
-    let checkBoxes = items.map((item, index) =>
+    let checkBoxes = items.map((item) =>
       <div>
         <Checkbox inline id={id} value={item} onChange={eventHandler}> {item}</Checkbox>
       </div>
@@ -192,7 +195,15 @@ function RightFormContainer(props) {
 }
 
 function GenerateSelectElements(data, eventHandler) {
-
+  let selectElements = data.map((data) =>
+    <FormGroup>
+      <ControlLabel>{data.label}</ControlLabel>
+      <FormControl id={data.id} componentClass="select" onChange={eventHandler}>
+        {data.traits.map((trait) => <option value={trait}>{trait}</option>)}
+      </FormControl>
+    </FormGroup>
+  );
+  return selectElements;
 }
 
 function FieldGroup({ id, label, help, ...props }) {
@@ -277,6 +288,7 @@ class App extends Component {
       background: "none",
       items: [],
       role: "none",
+      trait: formSelectFields[0].placeholder,
       table: []
     }
     this.handleChange = this.handleChange.bind(this)
@@ -302,6 +314,10 @@ class App extends Component {
         break;
       case "radioRoles":
         this.setState({role: e.target.value});
+        break;
+      case "selectTrait":
+        this.setState({trait: e.target.value})
+        console.log("Trait id: " + e.target.id + " value is: " + e.target.value);
         break;
       default:
         console.log("hmmm..")
@@ -333,7 +349,7 @@ class App extends Component {
     this.setState({table: newTable})
   }
 
-  //TODO: reset values in state too!
+  //TODO: reset values in state too! Refactor Generate-functions too!!!!
   resetInputValues() {
     this.formRef.reset();
   }
