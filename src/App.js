@@ -28,12 +28,23 @@ const formTextAreas = [
 
 const formSelectFields = [
   {
-
+    id: "selectTrait",
+    label: "Trait",
+    traits: [
+      "Tough",
+      "Cunning",
+      "Wise",
+      "Agile",
+      "Courageous",
+      "Brave",
+      "Single"
+    ]
   }
 ];
 
 const formCheckBoxes = [
   {
+    id: "checkBoxesStartingItems",
     label: "Starting Items",
     items: [
       "Life Ring",
@@ -45,7 +56,13 @@ const formCheckBoxes = [
 
 const formRadioButtons = [
   {
-
+    id: "radioRoles",
+    label: "Role",
+    roles: [
+      "Tank",
+      "Rogue",
+      "Mage"
+    ]
   }
 ];
 
@@ -60,13 +77,15 @@ function TableRow(props) {
       <td>{props.data.name}</td>
       <td>{props.data.title}</td>
       <td>{props.data.background}</td>
+      <td>{props.data.items.map((item) => <p>{item}</p>)}</td>
+      <td>{props.data.role}</td>
       <td>
         <Button className="btn btn-danger" type="button" onClick={handleEvent}>
-          Kick-{props.index}
+          Kick
         </Button>
       </td>
     </tr>
-  )
+  );
 }
 
 function TableContainer(props) {
@@ -82,6 +101,8 @@ function TableContainer(props) {
             <th>Name</th>
             <th>Title</th>
             <th>Background Story</th>
+            <th>Items</th>
+            <th>Role</th>
             <th>Kick From Party</th>
           </tr>
         </thead>
@@ -117,45 +138,71 @@ function SubmitHandler(props) {
   );
 }
 
+function GenerateRadioButtons(data, eventHandler) {
+  let radioButtons = data.map((data) =>
+    <FormGroup className="container">
+      <ControlLabel>{data.label}</ControlLabel>
+      <br></br>
+      {RadioButtons(data.id, data.roles)}
+    </FormGroup>
+  );
+
+  function RadioButtons(id, roles) {
+    let radioButtons = roles.map((role) =>
+      <div>
+        <Radio inline id={id} name={id} value={role} onChange={eventHandler}> {role}</Radio>
+      </div>
+    );
+    return radioButtons;
+  }
+  return radioButtons;
+}
+
+function GenerateCheckBoxes(data, eventHandler) {
+  let checkBoxesContainer = data.map((data) =>
+    <FormGroup className="container">
+      <ControlLabel>{data.label}</ControlLabel>
+      <br></br>
+      {CheckBoxes(data.id, data.items)}
+    </FormGroup>
+  );
+
+  function CheckBoxes(id, items) {
+    let checkBoxes = items.map((item, index) =>
+      <div>
+        <Checkbox inline id={id} value={item} onChange={eventHandler}> {item}</Checkbox>
+      </div>
+    );
+    return checkBoxes;
+  }
+
+  return checkBoxesContainer;
+}
+
 function RightFormContainer(props) {
   let checkBoxes = GenerateCheckBoxes(formCheckBoxes, props.eventHandler);
+  let radioButtons = GenerateRadioButtons(formRadioButtons, props.eventHandler);
 
   return (
-    <div>
+    <div className="container">
       {checkBoxes}
+      {radioButtons}
     </div>
   )
+}
+
+function GenerateSelectElements(data, eventHandler) {
+
 }
 
 function FieldGroup({ id, label, help, ...props }) {
   return (
     <FormGroup controlId={id}>
-      <Col md={6}>
-        <ControlLabel>{label}</ControlLabel>
-        <FormControl {...props} />
-        {help && <HelpBlock>{help}</HelpBlock>}
-      </Col>
+      <ControlLabel>{label}</ControlLabel>
+      <FormControl {...props} />
+      {help && <HelpBlock>{help}</HelpBlock>}
     </FormGroup>
   );
-}
-
-//TODO: here!
-function GenerateCheckBoxes(data, eventHandler) {
-
-  let checkBoxes = data.items.map((e, index) =>
-      <Col md={2}>
-        <Checkbox inline>{e.items[index]}</Checkbox>
-      </Col>
-  );
-
-  let checkBoxesContainer = data.map((e) =>
-    <FieldGroup>
-      <ControlLabel>{e.label}</ControlLabel>
-      {checkBoxes}
-    </FieldGroup>
-  );
-
-  return checkBoxesContainer;
 }
 
 function GenerateTextAreas(data, eventHandler) {
@@ -187,11 +234,13 @@ function GenerateInputFields(data, eventHandler) {
 function LeftFormContainer(props) {
   let inputFields = GenerateInputFields(formInputFields, props.eventHandler);
   let textAreas = GenerateTextAreas(formTextAreas, props.eventHandler);
+  let selectElements = GenerateSelectElements(formSelectFields, props.eventHandler);
 
   return (
-    <div>
+    <div className="container">
       {inputFields}
       {textAreas}
+      {selectElements}
     </div>
   );
 }
@@ -226,9 +275,12 @@ class App extends Component {
       name: "none",
       title: "none",
       background: "none",
+      items: [],
+      role: "none",
       table: []
     }
     this.handleChange = this.handleChange.bind(this)
+    this.handleCheckboxEvent = this.handleCheckboxEvent.bind(this)
     this.resetInputValues = this.resetInputValues.bind(this)
     this.addToTable = this.addToTable.bind(this)
     this.removeTableRow = this.removeTableRow.bind(this)
@@ -237,13 +289,19 @@ class App extends Component {
   handleChange(e) {
     switch(e.target.id) {
       case "inputName":
-        this.setState({ name: e.target.value})
+        this.setState({name: e.target.value})
         break;
       case "inputTitle":
-        this.setState({ title: e.target.value})
+        this.setState({title: e.target.value})
         break;
       case "inputBackgroundStory":
-        this.setState({ background: e.target.value})
+        this.setState({background: e.target.value})
+        break;
+      case "checkBoxesStartingItems":
+        this.handleCheckboxEvent(e);
+        break;
+      case "radioRoles":
+        this.setState({role: e.target.value});
         break;
       default:
         console.log("hmmm..")
@@ -251,22 +309,31 @@ class App extends Component {
     }
   }
 
+  handleCheckboxEvent(e) {
+    let newItems = this.state.items.slice();
+
+    if (e.target.checked) {
+      newItems.push(e.target.value);
+    } else if (!e.target.checked) {
+      let indexOfItem = this.state.items.indexOf(e.target.value);
+      newItems.splice(indexOfItem, 1);
+    }
+    this.setState({items: newItems})
+  }
+
   addToTable() {
     let newTable = this.state.table.slice();
     newTable.push(this.state);
-    this.setState({
-      table: newTable
-    })
+    this.setState({table: newTable})
   }
 
   removeTableRow(index) {
     let newTable = this.state.table.slice();
     newTable.splice(index, 1);
-    this.setState({
-      table: newTable
-    })
+    this.setState({table: newTable})
   }
 
+  //TODO: reset values in state too!
   resetInputValues() {
     this.formRef.reset();
   }
@@ -282,11 +349,19 @@ class App extends Component {
             </Col>
           </Row>
           <form ref={(e) => {this.formRef = e;}}>
-              <LeftFormContainer eventHandler={this.handleChange} />
-              <RightFormContainer eventHandler={this.handleChange} />
+            <Row>
+              <Col md={6}>
+                <LeftFormContainer eventHandler={this.handleChange} />
+              </Col>
+              <Col md={6}>
+                <RightFormContainer eventHandler={this.handleChange} />
+              </Col>
+            </Row>
+            <Row>
               <SubmitHandler addToTable={this.addToTable}
                              resetInputValues={this.resetInputValues}
               />
+            </Row>
           </form>
           <br></br><br></br>
           <Row>
