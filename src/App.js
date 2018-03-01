@@ -50,7 +50,9 @@ const formCheckBoxes = [
     items: [
       "Life Ring",
       "Fire Bombs x5",
-      "Cracked Red Eye Orb"
+      "Cracked Red Eye Orb",
+      "Siegbräu",
+      "Hello Carving"
     ]
   }
 ];
@@ -62,7 +64,9 @@ const formRadioButtons = [
     roles: [
       "Tank",
       "Rogue",
-      "Mage"
+      "Mage",
+      "Decepticon",
+      "Asparagus"
     ]
   }
 ];
@@ -146,18 +150,13 @@ function GenerateRadioButtons(data, eventHandler) {
     <FormGroup className="container">
       <ControlLabel>{data.label}</ControlLabel>
       <br></br>
-      {RadioButtons(data.id, data.roles)}
+      {data.roles.map((role) =>
+        <div>
+          <Radio inline id={data.id} name={data.id} value={role} onChange={eventHandler}> {role}</Radio>
+        </div>)}
     </FormGroup>
   );
 
-  function RadioButtons(id, roles) {
-    let radioButtons = roles.map((role) =>
-      <div>
-        <Radio inline id={id} name={id} value={role} onChange={eventHandler}> {role}</Radio>
-      </div>
-    );
-    return radioButtons;
-  }
   return radioButtons;
 }
 
@@ -166,19 +165,12 @@ function GenerateCheckBoxes(data, eventHandler) {
     <FormGroup className="container">
       <ControlLabel>{data.label}</ControlLabel>
       <br></br>
-      {CheckBoxes(data.id, data.items)}
+      {data.items.map((item) =>
+        <div>
+          <Checkbox inline id={data.id} value={item} onChange={eventHandler}> {item}</Checkbox>
+        </div>)}
     </FormGroup>
   );
-
-  function CheckBoxes(id, items) {
-    let checkBoxes = items.map((item) =>
-      <div>
-        <Checkbox inline id={id} value={item} onChange={eventHandler}> {item}</Checkbox>
-      </div>
-    );
-    return checkBoxes;
-  }
-
   return checkBoxesContainer;
 }
 
@@ -187,7 +179,7 @@ function RightFormContainer(props) {
   let radioButtons = GenerateRadioButtons(formRadioButtons, props.eventHandler);
 
   return (
-    <div className="container">
+    <div>
       {checkBoxes}
       {radioButtons}
     </div>
@@ -248,7 +240,7 @@ function LeftFormContainer(props) {
   let selectElements = GenerateSelectElements(formSelectFields, props.eventHandler);
 
   return (
-    <div className="container">
+    <div>
       {inputFields}
       {textAreas}
       {selectElements}
@@ -256,25 +248,11 @@ function LeftFormContainer(props) {
   );
 }
 
-function Description(props) {
+function Header() {
   return (
-    <div className="container">
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          Create a posting of your dream
-          team by filling out this form. Have fun!
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Title(props) {
-  return (
-    <div className="container">
-      <div className="jumbotron">
-        Fictional RPG Party Creator!
-      </div>
+    <div className="jumbotron">
+      <h2>Fictional RPG Party Creator!</h2>
+      <p>Create a your dream team by filling out this form. Have fun!</p>
     </div>
   );
 }
@@ -283,11 +261,11 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      name: "none",
-      title: "none",
-      background: "none",
+      name: "",
+      title: "",
+      background: "",
       items: [],
-      role: "none",
+      role: "",
       trait: formSelectFields[0].placeholder,
       table: []
     }
@@ -317,7 +295,6 @@ class App extends Component {
         break;
       case "selectTrait":
         this.setState({trait: e.target.value})
-        console.log("Trait id: " + e.target.id + " value is: " + e.target.value);
         break;
       default:
         console.log("hmmm..")
@@ -349,9 +326,16 @@ class App extends Component {
     this.setState({table: newTable})
   }
 
-  //TODO: reset values in state too! Refactor Generate-functions too!!!!
   resetInputValues() {
     this.formRef.reset();
+    this.setState({
+      name: "",
+      title: "",
+      background: "",
+      items: [],
+      role: "",
+      trait: formSelectFields[0].placeholder
+    })
   }
 
   render() {
@@ -360,8 +344,7 @@ class App extends Component {
         <Grid>
           <Row>
             <Col md={12}>
-              <Title/>
-              <Description/>
+              <Header />
             </Col>
           </Row>
           <form ref={(e) => {this.formRef = e;}}>

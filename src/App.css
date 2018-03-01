@@ -26,3 +26,12 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.control-label {
+  font-weight: bold;
+}
+
+.jumbotron {
+  text-align: center;
+  margin-top: 15px;
+}
