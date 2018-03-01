@@ -72,6 +72,10 @@ const formRadioButtons = [
 ];
 
 function TableRow(props) {
+  let tableStyle = {
+    maxWidth: "300px"
+  }
+
   function handleEvent() {
     props.removeTableRow(props.index);
     console.log("Removing Entry from index: " + props.index);
@@ -81,7 +85,7 @@ function TableRow(props) {
     <tr>
       <td>{props.data.name}</td>
       <td>{props.data.title}</td>
-      <td>{props.data.background}</td>
+      <td style={tableStyle}>{props.data.background}</td>
       <td>{props.data.items.map((item) => <p>{item}</p>)}</td>
       <td>{props.data.role}</td>
       <td>{props.data.trait}</td>
